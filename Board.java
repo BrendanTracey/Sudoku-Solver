@@ -2,6 +2,7 @@ import java.util.Scanner;
 import java.util.ArrayList;
 public class Board {
 	int[][] board = new int[9][9];
+	int[][] tempflag = new int[2][9];
 	//smart board exists as a list of all the remaining possible numbers for each square, used to make concrete decisions and calculate how long a full guess calcuation would take.
 	ArrayList<Integer>[][] smartboard = new ArrayList[9][9];
 	public Board() {
@@ -116,6 +117,7 @@ public class Board {
 			g.simplecheck();
 			g.mediumcheck();
 			g.hardcheck();
+			g.hueristic_solve();
 			g.valid();
 		}
 		g.print();
@@ -445,6 +447,38 @@ public class Board {
 				}
 			}
 		}
+	}
+	public void hueristic_solve(){
+		//first find the number with least possible options, maximizing odds of random correct guess
+		int[] lowcounter = new int[9];
+		for(int x = 0; x < 9;x++) {
+			lowcounter[x] = 0;
+		}
+		for(int a = 0; a < 9;a++) {
+			for(int b=0; b < 9; b++) {
+				for(int c = 1; c < 10; c++) {
+					if (smartboard[a][b].contains(new Integer(c))) {
+						lowcounter[c-1]++;
+					}
+				}
+			}
+		}
+		for(int x = 0; x < 9; x++) {
+			System.out.print(lowcounter[x] + ", ");
+		}
+		System.out.println();
+		int lowest  = 81;
+		int lowest_number = 0;
+		for(int x = 0; x < 9; x++) {
+			if(lowcounter[x] < lowest && lowcounter[x] != 0) {
+				lowest = lowcounter[x];
+				lowest_number = x + 1;
+			}
+		}
+		System.out.println("There are " + lowest + "/" + lowcounter[lowest_number-1] + " " + lowest_number + "'s");
+		//of all the possibilities with that number, pick the square that has least possible number of other options
+		//once again picking the options with the highest odds of success
+		
 	}
 
 }
