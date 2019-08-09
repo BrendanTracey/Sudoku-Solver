@@ -3,6 +3,7 @@ import java.util.ArrayList;
 public class Board {
 	int[][] board = new int[9][9];
 	int[][] tempflag = new int[2][9];
+	boolean bricked  = false;
 	//smart board exists as a list of all the remaining possible numbers for each square, used to make concrete decisions and calculate how long a full guess calcuation would take.
 	ArrayList<Integer>[][] smartboard = new ArrayList[9][9];
 	public Board() {
@@ -14,87 +15,87 @@ public class Board {
 			}		
 		}	
 		//sample board for bug testing
-		board[0][0] = 0;
+		board[0][0] = 7;
 		board[0][1] = 0;
-		board[0][2] = 8;
+		board[0][2] = 0;
 		board[0][3] = 0;
-		board[0][4] = 3;
-		board[0][5] = 9;
+		board[0][4] = 2;
+		board[0][5] = 0;
 		board[0][6] = 0;
-		board[0][7] = 0;
-		board[0][8] = 1;
+		board[0][7] = 6;
+		board[0][8] = 0;
 		board[1][0] = 0;
 		board[1][1] = 0;
-		board[1][2] = 0;
+		board[1][2] = 9;
 		board[1][3] = 0;
-		board[1][4] = 8;
-		board[1][5] = 0;
-		board[1][6] = 7;
-		board[1][7] = 0;
+		board[1][4] = 0;
+		board[1][5] = 5;
+		board[1][6] = 0;
+		board[1][7] = 4;
 		board[1][8] = 0;
-		board[2][0] = 0;
-		board[2][1] = 1;
+		board[2][0] = 8;
+		board[2][1] = 0;
 		board[2][2] = 0;
-		board[2][3] = 0;
+		board[2][3] = 3;
 		board[2][4] = 0;
 		board[2][5] = 0;
-		board[2][6] = 3;
-		board[2][7] = 2;
+		board[2][6] = 9;
+		board[2][7] = 0;
 		board[2][8] = 0;
-		board[3][0] = 0;
+		board[3][0] = 3;
 		board[3][1] = 0;
-		board[3][2] = 5;
-		board[3][3] = 9;
+		board[3][2] = 0;
+		board[3][3] = 7;
 		board[3][4] = 0;
 		board[3][5] = 0;
 		board[3][6] = 0;
-		board[3][7] = 7;
-		board[3][8] = 0;
+		board[3][7] = 8;
+		board[3][8] = 6;
 		board[4][0] = 0;
-		board[4][1] = 2;
+		board[4][1] = 0;
 		board[4][2] = 0;
 		board[4][3] = 0;
 		board[4][4] = 0;
 		board[4][5] = 0;
 		board[4][6] = 0;
-		board[4][7] = 9;
+		board[4][7] = 0;
 		board[4][8] = 0;
-		board[5][0] = 0;
-		board[5][1] = 3;
+		board[5][0] = 4;
+		board[5][1] = 9;
 		board[5][2] = 0;
 		board[5][3] = 0;
 		board[5][4] = 0;
 		board[5][5] = 6;
-		board[5][6] = 4;
+		board[5][6] = 0;
 		board[5][7] = 0;
-		board[5][8] = 0;
+		board[5][8] = 1;
 		board[6][0] = 0;
-		board[6][1] = 6;
-		board[6][2] = 4;
+		board[6][1] = 0;
+		board[6][2] = 1;
 		board[6][3] = 0;
 		board[6][4] = 0;
-		board[6][5] = 0;
+		board[6][5] = 7;
 		board[6][6] = 0;
-		board[6][7] = 3;
-		board[6][8] = 0;
+		board[6][7] = 0;
+		board[6][8] = 4;
 		board[7][0] = 0;
-		board[7][1] = 0;
-		board[7][2] = 3;
-		board[7][3] = 0;
-		board[7][4] = 1;
+		board[7][1] = 3;
+		board[7][2] = 0;
+		board[7][3] = 6;
+		board[7][4] = 0;
 		board[7][5] = 0;
-		board[7][6] = 0;
+		board[7][6] = 8;
 		board[7][7] = 0;
 		board[7][8] = 0;
-		board[8][0] = 7;
-		board[8][1] = 0;
+		board[8][0] = 0;
+		board[8][1] = 5;
 		board[8][2] = 0;
-		board[8][3] = 5;
-		board[8][4] = 6;
+		board[8][3] = 0;
+		board[8][4] = 8;
 		board[8][5] = 0;
-		board[8][6] = 8;
+		board[8][6] = 0;
 		board[8][7] = 0;
-		board[8][8] = 0;
+		board[8][8] = 2;
 		
 		//set all the smart board possibilities ahead of time so as not to unintentionally reset any deductive progress
 		
@@ -114,10 +115,33 @@ public class Board {
 		g.print();
 		
 		while (!g.done() ) {
+			int[][] temp = new int[9][9];
+			for (int a = 0; a < 9; a++) {
+				for(int b = 0; b < 9;b++) {
+					temp[a][b] = new Integer(g.board[a][b]);
+				}
+			}
 			g.simplecheck();
 			g.mediumcheck();
 			g.hardcheck();
-			g.hueristic_solve();
+			g.bricked = true;
+			for (int a = 0; a < 9; a++) {
+				for(int b = 0; b < 9;b++) {
+					if(temp[a][b] != g.board[a][b]) {
+						g.bricked = false;
+					}
+				}
+			}
+			if(g.bricked) {
+				System.out.println("Deep into the tank");
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				g.hueristic_solve();
+			}
 			g.valid();
 		}
 		g.print();
@@ -467,7 +491,7 @@ public class Board {
 			System.out.print(lowcounter[x] + ", ");
 		}
 		System.out.println();
-		int lowest  = 81;
+		int lowest = 81;
 		int lowest_number = 0;
 		for(int x = 0; x < 9; x++) {
 			if(lowcounter[x] < lowest && lowcounter[x] != 0) {
@@ -475,10 +499,39 @@ public class Board {
 				lowest_number = x + 1;
 			}
 		}
-		System.out.println("There are " + lowest + "/" + lowcounter[lowest_number-1] + " " + lowest_number + "'s");
+		if(lowest_number != 0) {
+			System.out.println("There are " + lowest + "/" + lowcounter[lowest_number-1] + " " + lowest_number + "'s");
+		}
 		//of all the possibilities with that number, pick the square that has least possible number of other options
 		//once again picking the options with the highest odds of success
-		
+		int[][] squarecount = new int[9][9];
+		int low = 9;
+		int a_low =10;
+		int b_low = 10;
+		for(int a = 0; a < 9;a++) {
+			for(int b=0; b < 9; b++) {
+				squarecount[a][b] = 0;
+				if(board[a][b] == 0) {
+					squarecount[a][b] = smartboard[a][b].size();
+				}
+				System.out.print(squarecount[a][b]);
+			}
+			System.out.println();
+		}
+		for(int a = 0; a < 9;a++) {
+			for(int b=0; b < 9; b++) {
+				if(smartboard[a][b].contains(new Integer(lowest_number)) && squarecount[a][b] < low && squarecount[a][b] != 0) {
+					low = squarecount[a][b];
+					a_low = a;
+					b_low = b;
+				}
+			}
+		}
+		if(lowest_number != 0) {
+			System.out.println("Lets try " + lowest_number + " at " + a_low + ", " + b_low);
+			board[a_low][b_low] = lowest_number;
+		}
+		bricked = false;
 	}
 
 }
