@@ -3,8 +3,9 @@ import java.util.ArrayList;
 import java.math.*;
 public class Board {
 	int[][] board = new int[9][9];
-	int depth = 0;
+	int depth = 1;
 	boolean bricked  = false;
+	boolean dumbguess = false;
 	//smart board exists as a list of all the remaining possible numbers for each square, used to make concrete decisions and calculate how long a full guess calcuation would take.
 	ArrayList<Integer>[][] smartboard = new ArrayList[9][9];
 	//to retain guessing states, a 1d array, each slot contains the board state of a smartboard
@@ -22,85 +23,85 @@ public class Board {
 		}	
 		//sample board for bug testing
 		board[0][0] = 0;
-		board[0][1] = 7;
+		board[0][1] = 4;
 		board[0][2] = 0;
 		board[0][3] = 0;
-		board[0][4] = 5;
+		board[0][4] = 0;
 		board[0][5] = 0;
-		board[0][6] = 4;
-		board[0][7] = 0;
-		board[0][8] = 8;
-		board[1][0] = 2;
+		board[0][6] = 0;
+		board[0][7] = 7;
+		board[0][8] = 0;
+		board[1][0] = 0;
 		board[1][1] = 0;
 		board[1][2] = 0;
 		board[1][3] = 0;
-		board[1][4] = 0;
+		board[1][4] = 3;
 		board[1][5] = 0;
-		board[1][6] = 0;
-		board[1][7] = 0;
-		board[1][8] = 9;
-		board[2][0] = 0;
+		board[1][6] = 9;
+		board[1][7] = 2;
+		board[1][8] = 0;
+		board[2][0] = 6;
 		board[2][1] = 0;
 		board[2][2] = 0;
-		board[2][3] = 1;
-		board[2][4] = 0;
-		board[2][5] = 0;
+		board[2][3] = 0;
+		board[2][4] = 9;
+		board[2][5] = 7;
 		board[2][6] = 0;
-		board[2][7] = 3;
+		board[2][7] = 0;
 		board[2][8] = 0;
-		board[3][0] = 6;
-		board[3][1] = 1;
+		board[3][0] = 4;
+		board[3][1] = 2;
 		board[3][2] = 0;
-		board[3][3] = 5;
-		board[3][4] = 0;
+		board[3][3] = 3;
+		board[3][4] = 8;
 		board[3][5] = 0;
 		board[3][6] = 0;
 		board[3][7] = 0;
-		board[3][8] = 3;
+		board[3][8] = 0;
 		board[4][0] = 0;
 		board[4][1] = 0;
-		board[4][2] = 0;
+		board[4][2] = 1;
 		board[4][3] = 0;
-		board[4][4] = 4;
+		board[4][4] = 0;
 		board[4][5] = 0;
-		board[4][6] = 0;
+		board[4][6] = 2;
 		board[4][7] = 0;
 		board[4][8] = 0;
-		board[5][0] = 3;
+		board[5][0] = 0;
 		board[5][1] = 0;
 		board[5][2] = 0;
 		board[5][3] = 0;
-		board[5][4] = 0;
-		board[5][5] = 9;
+		board[5][4] = 4;
+		board[5][5] = 2;
 		board[5][6] = 0;
-		board[5][7] = 2;
-		board[5][8] = 4;
+		board[5][7] = 5;
+		board[5][8] = 8;
 		board[6][0] = 0;
-		board[6][1] = 6;
+		board[6][1] = 0;
 		board[6][2] = 0;
-		board[6][3] = 0;
-		board[6][4] = 0;
-		board[6][5] = 1;
+		board[6][3] = 8;
+		board[6][4] = 1;
+		board[6][5] = 0;
 		board[6][6] = 0;
 		board[6][7] = 0;
-		board[6][8] = 0;
-		board[7][0] = 4;
-		board[7][1] = 0;
-		board[7][2] = 0;
+		board[6][8] = 5;
+		board[7][0] = 0;
+		board[7][1] = 6;
+		board[7][2] = 8;
 		board[7][3] = 0;
-		board[7][4] = 0;
+		board[7][4] = 5;
 		board[7][5] = 0;
 		board[7][6] = 0;
 		board[7][7] = 0;
-		board[7][8] = 7;
-		board[8][0] = 8;
-		board[8][1] = 0;
-		board[8][2] = 3;
+		board[7][8] = 0;
+		board[8][0] = 0;
+		board[8][1] = 9;
+		board[8][2] = 0;
 		board[8][3] = 0;
-		board[8][4] = 2;
+		board[8][4] = 0;
 		board[8][5] = 0;
 		board[8][6] = 0;
-		board[8][7] = 4;
+		board[8][7] = 6;
 		board[8][8] = 0;
 		
 		//set all the smart board possibilities ahead of time so as not to unintentionally reset any deductive progress
@@ -127,10 +128,11 @@ public class Board {
 					temp[a][b] = new Integer(g.board[a][b]);
 				}
 			}
+			
 			g.simplecheck();
 			g.mediumcheck();
 			g.hardcheck();
-			
+			g.smartupdate();
 			g.bricked = true;
 			for (int a = 0; a < 9; a++) {
 				for(int b = 0; b < 9;b++) {
@@ -139,8 +141,8 @@ public class Board {
 					}
 				}
 			}
-			g.whoops();
-			if(g.bricked) {
+			
+			if(g.bricked && (g.whoops() == false)) {
 				System.out.println("Deep into the tank");
 				try {
 					Thread.sleep(100);
@@ -280,7 +282,10 @@ public class Board {
 					System.out.println("Changed " + i + j + " to " + smartboard[i][j].get(0));
 					board[i][j] = smartboard[i][j].get(0);
 					smartboard[i][j].clear();
-					simplecheck();
+					//simplecheck();
+				}
+				if(board[i][j] != 0) {
+					smartboard[i][j].clear();
 				}
 			}
 		}
@@ -324,6 +329,7 @@ public class Board {
 			}
 		}
 		print();
+
 	}
 	//slightly more complex method to check for rows, columns, boxes, where there is one possibility 
 	public void mediumcheck() {
@@ -562,31 +568,50 @@ public class Board {
 			//save the board state 
 			for(int a = 0; a < 9;a++) {
 				for(int b=0; b < 9; b++) {
-					if(smartboard[a][b].size() > 1) {
+					if(smartboard[a][b].size() > 0) {
 						guessboards[depth][a][b] = new ArrayList<Integer>(smartboard[a][b]);
 					}
 				}
 			}
+			//lets see what the fuck is happening in here
+			System.out.println("Lets see what the fuck is happening in here");
+			for(int x = 0; x < 9; x++) {
+				for(int y = 0; y < 9; y++){
+					System.out.print("(" + x + y + ")" );
+					for (int i = 0; i < guessboards[depth][x][y].size(); i++) {
+						System.out.print("[" + guessboards[depth][x][y].get(i) + "] ");
+					}
+					System.out.println();
+				}
+				
+			}
+			System.out.println("starting at depth " + depth + " captain");
 			board[a_low][b_low] = lowest_number;
-			depth++;
+			depth += 1;
 			bricked = false;
+			System.out.println("Moving to depth " + depth + " captain");
 		}
 
 		
 	}
-	public void whoops() {
+	public boolean whoops() {
+		//future me: bug is in not reseting a bad guess on the actual board to zero, fix
 		boolean badguess = false;
+
 		for(int a = 0; a < 9; a++) {
 			for(int b = 0; b < 9; b++) {
 				if(board[a][b] == 0 && smartboard[a][b].size() == 0) {
 					badguess = true;
+					System.out.println("Aaron has formally fucked up  at " + a + b);
 				}
 			}
 		}
 		if (badguess) {
 			//reset to before the bad guess
 			System.out.println("whoops");
+			System.out.println("starting with depth " + depth + " captain");
 			depth--;
+			System.out.println("Lets see what the fuck is happening in here");
 			for(int a = 0; a < 9;a++) {
 				for(int b = 0; b < 9; b++) {
 					if(guessboards[depth][a][b].size() > 0) {
@@ -595,7 +620,23 @@ public class Board {
 					}
 				}
 			}
-			bricked = false;
+		
+			for(int x = 0; x < 9; x++) {
+				for(int y = 0; y < 9; y++){
+					System.out.print("(" + x + y + ")" );
+					for (int i = 0; i < guessboards[depth][x][y].size(); i++) {
+						System.out.print("[" + guessboards[depth][x][y].get(i) + "] ");
+					}
+					System.out.println();
+				}
+			}
+			
+			System.out.println("Moving to depth " + depth + " captain");
+			
+			return true;
+		}
+		else {
+			return false;
 		}
 	}
 
